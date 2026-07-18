@@ -1,0 +1,19 @@
+{
+  "name": "Daybreak OS Meridian — High Sun Prototype",
+  "short_name": "Meridian",
+  "description": "Interactive Daybreak OS prototype for the fictional Nahar Meridian NMC-01 home console.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#050606",
+  "theme_color": "#090b0c",
+  "icons": [
+    {
+      "src": "high-sun.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+PROJECT HIGH SUN — REPOSITORY BOUNDARY
+
+Everything for Nahar Meridian and Daybreak OS Meridian belongs under /meridian.
+The repository root remains the Nahar Pico / Project Small Sun application.
+Meridian code must not import, overwrite, rename, or depend on Pico source files.
+Shared lore and simulated Pico-link features may exist, but their implementation remains inside /meridian.
