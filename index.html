@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080908" />
+  <title>Daybreak OS — Nahar Pico</title>
+  <style>
+    :root {
+      --ink:#070807;
+      --graphite:#111311;
+      --panel:#171a17;
+      --panel-2:#20231f;
+      --bone:#eee9dc;
+      --muted:#a8a79e;
+      --amber:#e6a813;
+      --amber-soft:#ffc94c;
+      --line:rgba(238,233,220,.16);
+      --glass:rgba(11,13,11,.72);
+      --shadow:0 28px 80px rgba(0,0,0,.5);
+      --radius:28px;
+      --ease:cubic-bezier(.2,.8,.2,1);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--bone);font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input{font:inherit}
+    button{color:inherit}
+    .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    #app{position:relative;width:100%;height:100%;isolation:isolate;background:#080908}
+    .noise{position:absolute;inset:0;pointer-events:none;opacity:.1;z-index:30;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");mix-blend-mode:soft-light}
+    .boot{position:absolute;inset:0;z-index:90;display:grid;place-items:center;background:#050605;transition:opacity .8s var(--ease),visibility .8s}
+    .boot.hidden{opacity:0;visibility:hidden}
+    .boot-mark{display:flex;flex-direction:column;align-items:center;gap:28px;text-align:center}
+    .sun-core{width:112px;height:112px;border:2px solid var(--bone);clip-path:polygon(20% 0,80% 0,100% 20%,100% 80%,80% 100%,20% 100%,0 80%,0 20%);display:grid;place-items:center;position:relative;animation:bootPulse 2.1s infinite}
+    .sun-core::before{content:"";width:31px;height:31px;border-radius:50%;background:var(--amber);box-shadow:0 0 32px rgba(230,168,19,.35)}
+    .sun-core::after{content:"";position:absolute;inset:17px;background:repeating-conic-gradient(from 0deg,transparent 0 11deg,var(--bone) 11deg 14deg,transparent 14deg 45deg);mask:radial-gradient(circle,transparent 0 29px,#000 30px 42px,transparent 43px)}
+    @keyframes bootPulse{50%{filter:drop-shadow(0 0 14px rgba(230,168,19,.26));transform:scale(1.025)}}
+    .boot-title{letter-spacing:.42em;font-size:clamp(22px,3vw,42px);font-weight:500;margin-right:-.42em}
+    .boot-sub{font-size:11px;letter-spacing:.5em;color:var(--muted);margin-right:-.5em}
+    .boot-progress{width:200px;height:2px;background:rgba(255,255,255,.12);overflow:hidden}
+    .boot-progress span{display:block;width:35%;height:100%;background:var(--amber);animation:load 2.6s var(--ease) forwards}
+    @keyframes load{to{width:100%}}
+
+    .shell{position:absolute;inset:0;display:grid;grid-template-rows:auto 1fr auto;padding:clamp(20px,3vw,42px) clamp(22px,4vw,64px) max(20px,env(safe-area-inset-bottom));z-index:2}
+    .ambient{position:absolute;inset:0;z-index:-3;background-size:cover;background-position:center;transition:background-image .7s var(--ease),filter .7s;filter:saturate(.55) brightness(.34) contrast(1.1);transform:scale(1.04)}
+    .ambient::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,6,5,.96) 0%,rgba(5,6,5,.68) 42%,rgba(5,6,5,.24) 70%,rgba(5,6,5,.68) 100%),linear-gradient(0deg,#080908 0%,transparent 35%,rgba(0,0,0,.35) 100%)}
+    .ambient-glow{position:absolute;inset:auto -15vw -34vh auto;width:80vw;height:80vw;border-radius:50%;z-index:-2;background:radial-gradient(circle,rgba(230,168,19,.15),transparent 62%);transition:transform .8s var(--ease)}
+
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:54px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand-mark{width:38px;height:38px;border:1px solid rgba(238,233,220,.75);clip-path:polygon(18% 0,82% 0,100% 18%,100% 82%,82% 100%,18% 100%,0 82%,0 18%);display:grid;place-items:center;position:relative}
+    .brand-mark::before{content:"";width:9px;height:9px;background:var(--amber);border-radius:1px;box-shadow:0 0 0 5px rgba(230,168,19,.09)}
+    .brand-copy strong{display:block;font-size:13px;letter-spacing:.28em;font-weight:600}.brand-copy span{display:block;color:var(--muted);font-size:9px;letter-spacing:.34em;margin-top:4px}
+    .statusbar{display:flex;align-items:center;gap:18px;color:var(--muted);font-size:12px;letter-spacing:.08em}
+    .status-chip{display:flex;align-items:center;gap:7px}.status-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px rgba(230,168,19,.7)}
+    .clock{min-width:62px;text-align:right;color:var(--bone)}
+
+    .main{display:flex;flex-direction:column;justify-content:center;min-height:0;padding-top:2vh}
+    .hero-copy{max-width:min(700px,65vw);min-height:162px;transition:opacity .25s}
+    .eyebrow{display:flex;align-items:center;gap:10px;color:var(--amber-soft);font-size:11px;letter-spacing:.34em;text-transform:uppercase}
+    .eyebrow::before{content:"";width:30px;height:1px;background:var(--amber)}
+    h1{font-size:clamp(42px,7vw,104px);line-height:.88;letter-spacing:-.055em;margin:18px 0 18px;font-weight:520;text-transform:uppercase;max-width:1000px;text-wrap:balance}
+    .hero-description{color:#cac8bf;max-width:570px;font-size:clamp(14px,1.35vw,18px);line-height:1.55;margin:0}
+    .hero-meta{display:flex;align-items:center;gap:13px;margin-top:18px;color:var(--muted);font-size:11px;letter-spacing:.13em}.hero-meta b{color:var(--bone);font-weight:600}.divider-dot{width:3px;height:3px;background:var(--amber);border-radius:50%}
+
+    .carousel-wrap{margin-top:clamp(30px,5vh,58px);position:relative}
+    .carousel{display:flex;gap:16px;overflow:visible;align-items:flex-end;transition:transform .45s var(--ease);will-change:transform}
+    .card{position:relative;width:clamp(120px,11.5vw,184px);aspect-ratio:.72;border-radius:18px;overflow:hidden;flex:none;border:1px solid rgba(238,233,220,.14);background:#171917;box-shadow:0 14px 32px rgba(0,0,0,.34);transform-origin:bottom center;transition:transform .38s var(--ease),border-color .38s,box-shadow .38s,opacity .38s;cursor:pointer;padding:0;text-align:left}
+    .card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.52) contrast(1.07) brightness(.72);transition:transform .7s var(--ease),filter .4s}
+    .card::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.9) 100%)}
+    .card::after{content:"";position:absolute;inset:0;z-index:2;border:2px solid transparent;border-radius:inherit;transition:border-color .3s}
+    .card.active{transform:translateY(-18px) scale(1.08);border-color:rgba(238,233,220,.8);box-shadow:0 24px 50px rgba(0,0,0,.55),0 0 0 1px rgba(230,168,19,.3)}
+    .card.active::after{border-color:rgba(230,168,19,.85)}.card.active img{transform:scale(1.06);filter:saturate(.68) contrast(1.08) brightness(.82)}
+    .card-copy{position:absolute;z-index:3;left:13px;right:13px;bottom:12px}.card-title{font-size:11px;line-height:1.12;letter-spacing:.13em;text-transform:uppercase;font-weight:700}.card-code{font-size:8px;letter-spacing:.18em;color:var(--amber-soft);margin-top:7px}
+    .system-card{background:linear-gradient(145deg,#191c19,#0b0c0b);display:grid;place-items:center}.system-card .system-icon{position:absolute;top:28%;left:50%;transform:translateX(-50%);width:48px;height:48px;border:1px solid var(--bone);display:grid;place-items:center;clip-path:polygon(20% 0,80% 0,100% 20%,100% 80%,80% 100%,20% 100%,0 80%,0 20%)}.system-card .system-icon::before{content:"";width:10px;height:10px;background:var(--amber)}
+
+    .footer{display:flex;align-items:end;justify-content:space-between;gap:20px;padding-top:24px}
+    .hints{display:flex;gap:24px;color:var(--muted);font-size:11px;letter-spacing:.08em;flex-wrap:wrap}.hint{display:flex;align-items:center;gap:8px}.key{min-width:22px;height:22px;padding:0 6px;border:1px solid rgba(238,233,220,.5);border-radius:50%;display:grid;place-items:center;color:var(--bone);font-size:10px}.key.square{border-radius:6px}
+    .now-playing{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:10px;letter-spacing:.13em;text-transform:uppercase}.equalizer{display:flex;gap:3px;align-items:flex-end;height:18px}.equalizer i{display:block;width:2px;background:var(--amber);animation:eq 1s ease-in-out infinite}.equalizer i:nth-child(1){height:7px}.equalizer i:nth-child(2){height:14px;animation-delay:.15s}.equalizer i:nth-child(3){height:10px;animation-delay:.28s}.equalizer i:nth-child(4){height:17px;animation-delay:.43s}@keyframes eq{50%{height:4px}}
+
+    .toast{position:absolute;top:88px;right:40px;z-index:60;min-width:280px;max-width:380px;padding:15px 17px;border:1px solid var(--line);background:rgba(12,14,12,.92);backdrop-filter:blur(22px);border-radius:14px;box-shadow:var(--shadow);transform:translateX(130%);transition:transform .45s var(--ease)}.toast.show{transform:translateX(0)}.toast strong{display:block;font-size:12px;letter-spacing:.12em}.toast span{display:block;color:var(--muted);font-size:11px;margin-top:5px;line-height:1.4}
+
+    .overlay{position:absolute;inset:0;z-index:70;background:rgba(4,5,4,.83);backdrop-filter:blur(18px);display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s;padding:24px}.overlay.open{opacity:1;visibility:visible}
+    .panel{width:min(980px,94vw);max-height:90vh;overflow:auto;background:linear-gradient(145deg,rgba(27,30,27,.97),rgba(9,10,9,.98));border:1px solid rgba(238,233,220,.18);border-radius:24px;box-shadow:var(--shadow);padding:clamp(22px,3vw,38px);position:relative}
+    .panel-header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}.panel-title{font-size:clamp(25px,4vw,48px);font-weight:520;letter-spacing:-.035em;text-transform:uppercase;margin:0}.panel-kicker{font-size:10px;letter-spacing:.25em;color:var(--amber);text-transform:uppercase;margin-bottom:8px}.close-btn,.icon-btn{border:1px solid var(--line);background:transparent;width:40px;height:40px;border-radius:50%;cursor:pointer;transition:.2s}.close-btn:hover,.icon-btn:hover{border-color:var(--amber);color:var(--amber)}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.setting{padding:18px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025)}.setting label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px;letter-spacing:.07em}.setting p{color:var(--muted);font-size:11px;line-height:1.5;margin:9px 0 0}.toggle{width:48px;height:26px;border-radius:20px;border:1px solid var(--line);background:#111;position:relative;cursor:pointer}.toggle::before{content:"";position:absolute;top:4px;left:4px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:.25s}.toggle.on{border-color:rgba(230,168,19,.6);background:rgba(230,168,19,.12)}.toggle.on::before{left:26px;background:var(--amber)}
+    .score-list{display:grid;gap:10px}.score-row{display:grid;grid-template-columns:48px 1fr auto;gap:14px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:13px}.score-thumb{width:48px;height:48px;border-radius:10px;object-fit:cover}.score-name{font-size:13px;letter-spacing:.08em;text-transform:uppercase}.score-code{font-size:9px;color:var(--muted);letter-spacing:.14em;margin-top:5px}.score-value{font-variant-numeric:tabular-nums;color:var(--amber-soft);font-size:20px}
+    .system-specs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.spec{border:1px solid var(--line);padding:16px;border-radius:13px}.spec span{display:block;color:var(--muted);font-size:9px;letter-spacing:.18em;text-transform:uppercase}.spec strong{display:block;margin-top:8px;font-size:13px;line-height:1.3}
+
+    .game-overlay{position:absolute;inset:0;z-index:80;background:#050605;opacity:0;visibility:hidden;transition:opacity .45s,visibility .45s}.game-overlay.open{opacity:1;visibility:visible}.game-shell{position:absolute;inset:0;display:grid;grid-template-rows:auto 1fr auto;padding:24px clamp(20px,4vw,56px) 28px}.game-top{display:flex;justify-content:space-between;align-items:center}.game-identity{display:flex;align-items:center;gap:12px}.game-identity img{width:42px;height:42px;border-radius:8px;object-fit:cover}.game-identity strong{font-size:13px;letter-spacing:.16em;text-transform:uppercase}.game-identity span{display:block;color:var(--muted);font-size:9px;letter-spacing:.15em;margin-top:4px}.game-status{font-size:10px;color:var(--amber);letter-spacing:.18em;text-transform:uppercase}
+    .game-stage{display:grid;place-items:center;min-height:0}.screen-frame{width:min(900px,90vw);height:min(560px,68vh);border:1px solid rgba(238,233,220,.19);border-radius:24px;background:linear-gradient(145deg,#0e100e,#050605);box-shadow:inset 0 0 0 8px #0a0b0a,0 24px 70px rgba(0,0,0,.55);position:relative;overflow:hidden}.screen-frame canvas{width:100%;height:100%;display:block;image-rendering:pixelated}.screen-ui{position:absolute;inset:0;pointer-events:none;padding:18px}.screen-hud{display:flex;justify-content:space-between;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.09em}.game-instructions{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,4,3,.82);backdrop-filter:blur(6px);transition:opacity .3s;pointer-events:auto}.game-instructions.hidden{opacity:0;pointer-events:none}.instruction-card{text-align:center;max-width:520px;padding:30px}.instruction-card h2{font-size:clamp(30px,5vw,64px);margin:0 0 12px;letter-spacing:-.04em}.instruction-card p{color:var(--muted);line-height:1.6;font-size:13px}.instruction-actions{display:flex;justify-content:center;gap:10px;margin-top:22px}.primary{border:1px solid var(--amber);background:var(--amber);color:#13120d;padding:11px 18px;border-radius:22px;font-weight:700;letter-spacing:.08em;cursor:pointer}.secondary{border:1px solid var(--line);background:transparent;padding:11px 18px;border-radius:22px;cursor:pointer}.game-footer{display:flex;justify-content:space-between;align-items:center;gap:20px;color:var(--muted);font-size:10px;letter-spacing:.12em}.touch-controls{display:none;gap:8px}.touch-controls button{width:48px;height:44px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04);touch-action:manipulation}.touch-controls button:active{background:rgba(230,168,19,.22);border-color:var(--amber)}
+
+    @media (max-width:800px){
+      .shell{padding:18px 18px 16px}.statusbar .status-chip:nth-child(-n+2){display:none}.hero-copy{max-width:94vw;min-height:150px}.hero-description{max-width:90vw}.carousel-wrap{margin-top:24px}.card{width:132px}.footer{align-items:center}.hints{gap:11px}.now-playing{display:none}.grid,.system-specs{grid-template-columns:1fr}.touch-controls{display:flex}.game-shell{padding:15px 12px 15px}.screen-frame{width:96vw;height:62vh;border-radius:16px}.game-footer>.hints{display:none}.panel{padding:20px}.toast{right:14px;left:14px;top:72px;min-width:auto}}
+    @media (max-height:700px){h1{font-size:48px}.hero-copy{min-height:125px}.hero-description{display:none}.carousel-wrap{margin-top:20px}.card{width:112px}.footer{padding-top:12px}.topbar{min-height:40px}}
+    @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="noise"></div>
+  <div class="boot" id="boot">
+    <div class="boot-mark">
+      <div class="sun-core"></div>
+      <div class="boot-title">DAYBREAK OS</div>
+      <div class="boot-sub">SMALL SUN SYSTEM</div>
+      <div class="boot-progress"><span></span></div>
+    </div>
+  </div>
+
+  <div class="ambient" id="ambient"></div>
+  <div class="ambient-glow"></div>
+  <main class="shell" aria-label="Daybreak OS dashboard">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-copy"><strong>NAHAR PICO</strong><span>NPC-01 · DAYBREAK OS</span></div>
+      </div>
+      <div class="statusbar">
+        <div class="status-chip"><span class="status-dot"></span>LIGHT MEMORY</div>
+        <div class="status-chip">PICO CARD: READY</div>
+        <div class="status-chip" id="soundStatus">SOUND ON</div>
+        <div class="clock" id="clock">--:--</div>
+      </div>
+    </header>
+
+    <section class="main">
+      <div class="hero-copy" id="heroCopy">
+        <div class="eyebrow" id="eyebrow">Built-in game · NWX-MTH-01</div>
+        <h1 id="heroTitle">Mothwell</h1>
+        <p class="hero-description" id="heroDescription">Follow fragments of light through a buried well before the crawling dark closes around you.</p>
+        <div class="hero-meta"><b id="heroGenre">Arcade survival</b><span class="divider-dot"></span><span id="heroControl">D-pad · A dash</span><span class="divider-dot"></span><span id="heroBest">Best 0000</span></div>
+      </div>
+
+      <div class="carousel-wrap">
+        <div class="carousel" id="carousel"></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="hints">
+        <span class="hint"><span class="key">A</span>OPEN</span>
+        <span class="hint"><span class="key">B</span>BACK</span>
+        <span class="hint"><span class="key square">← →</span>NAVIGATE</span>
+        <span class="hint"><span class="key square">F</span>FULLSCREEN</span>
+      </div>
+      <div class="now-playing"><span class="equalizer"><i></i><i></i><i></i><i></i></span><span>Daybreak system tone</span></div>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast"><strong id="toastTitle">MARK UNLOCKED</strong><span id="toastMessage">First Light</span></div>
+
+  <section class="overlay" id="modal" aria-hidden="true">
+    <div class="panel" role="dialog" aria-modal="true">
+      <div class="panel-header"><div><div class="panel-kicker" id="panelKicker">Daybreak OS</div><h2 class="panel-title" id="panelTitle">Settings</h2></div><button class="close-btn" id="closeModal" aria-label="Close">×</button></div>
+      <div id="panelBody"></div>
+    </div>
+  </section>
+
+  <section class="game-overlay" id="gameOverlay" aria-hidden="true">
+    <div class="game-shell">
+      <div class="game-top"><div class="game-identity"><img id="gameThumb" alt=""><div><strong id="gameName">Game</strong><span id="gameCode">NWX</span></div></div><div class="game-status" id="gameStatus">READY</div></div>
+      <div class="game-stage"><div class="screen-frame"><canvas id="gameCanvas" width="900" height="560"></canvas><div class="screen-ui"><div class="screen-hud"><span id="hudLeft"></span><span id="hudRight"></span></div></div><div class="game-instructions" id="gameInstructions"><div class="instruction-card"><h2 id="instructionTitle"></h2><p id="instructionText"></p><div class="instruction-actions"><button class="primary" id="startGame">BEGIN</button><button class="secondary" id="exitGame">RETURN TO SHELF</button></div></div></div></div></div>
+      <div class="game-footer"><div class="hints"><span class="hint"><span class="key">START</span>PAUSE</span><span class="hint"><span class="key">MENU</span>SHELF</span></div><div class="touch-controls" id="touchControls"><button data-key="ArrowLeft">←</button><button data-key="ArrowUp">↑</button><button data-key="ArrowDown">↓</button><button data-key="ArrowRight">→</button><button data-key="KeyA">A</button><button data-key="KeyB">B</button></div></div>
+    </div>
+  </section>
+</div>
+<script>
+(() => {
+  'use strict';
+  const games = [
+    {id:'mothwell',title:'Mothwell',code:'NWX-MTH-01',genre:'Arcade survival',control:'D-pad · A dash',desc:'Follow fragments of light through a buried well before the crawling dark closes around you.',image:'assets/mothwell.webp',type:'game'},
+    {id:'signal',title:'Dune Signal',code:'NWX-SIG-01',genre:'Signal puzzle',control:'D-pad tune · A lock',desc:'Tune frequency and phase to recover transmissions from machines buried beneath the desert.',image:'assets/dune-signal.webp',type:'game'},
+    {id:'falcon',title:'Black Falcon',code:'NWX-FLC-01',genre:'Flight arcade',control:'A flap · release fall',desc:'Carry the last ember of dawn between black towers without letting it fall.',image:'assets/black-falcon.webp',type:'game'},
+    {id:'doors',title:'100 Doors',code:'NWX-DRS-01',genre:'Micro roguelite',control:'Left/right · A open',desc:'Choose between impossible doors. Spend keys, preserve light, and outlast the tower.',image:'assets/doors.webp',type:'game'},
+    {id:'coin',title:'Coin Saint',code:'NWX-CNS-01',genre:'Reflex judgment',control:'Four actions · quick read',desc:'Judge falling coins by symbol: accept, reject, bless, or curse before fortune expires.',image:'assets/coin-saint.webp',type:'game'},
+    {id:'saves',title:'Light Memory',code:'SYSTEM · SAVE ARCHIVE',genre:'Persistent records',control:'View high scores',desc:'Review high scores, marks, and persistent progress stored by Daybreak OS.',type:'system'},
+    {id:'settings',title:'Settings',code:'SYSTEM · CONFIGURATION',genre:'Console controls',control:'Sound · motion · display',desc:'Adjust sound, motion, contrast, and system behavior.',type:'system'},
+    {id:'system',title:'System',code:'NPC-01 · v1.0 WEB',genre:'Diagnostics',control:'Inspect hardware',desc:'Inspect the Nahar Pico hardware profile and Daybreak OS web simulation.',type:'system'}
+  ];
+  const state = {
+    selected:0,
+    sound:JSON.parse(localStorage.getItem('daybreakSound') ?? 'true'),
+    motion:JSON.parse(localStorage.getItem('daybreakMotion') ?? 'true'),
+    contrast:localStorage.getItem('daybreakContrast') || 'normal',
+    scores:JSON.parse(localStorage.getItem('daybreakScores') || '{}'),
+    running:false,
+    paused:false,
+    activeGame:null,
+    keys:new Set(),
+    touchKeys:new Set(),
+    raf:0,
+    lastTime:0
+  };
+
+  const $ = s => document.querySelector(s);
+  const els = {
+    boot:$('#boot'), ambient:$('#ambient'), carousel:$('#carousel'), title:$('#heroTitle'), desc:$('#heroDescription'), eyebrow:$('#eyebrow'), genre:$('#heroGenre'), control:$('#heroControl'), best:$('#heroBest'), clock:$('#clock'), soundStatus:$('#soundStatus'), toast:$('#toast'), toastTitle:$('#toastTitle'), toastMessage:$('#toastMessage'), modal:$('#modal'), panelTitle:$('#panelTitle'), panelKicker:$('#panelKicker'), panelBody:$('#panelBody'), closeModal:$('#closeModal'), gameOverlay:$('#gameOverlay'), canvas:$('#gameCanvas'), gameThumb:$('#gameThumb'), gameName:$('#gameName'), gameCode:$('#gameCode'), gameStatus:$('#gameStatus'), hudLeft:$('#hudLeft'), hudRight:$('#hudRight'), instructions:$('#gameInstructions'), instructionTitle:$('#instructionTitle'), instructionText:$('#instructionText'), startGame:$('#startGame'), exitGame:$('#exitGame'), touchControls:$('#touchControls')
+  };
+  const ctx = els.canvas.getContext('2d');
+
+  function scoreOf(id){return Number(state.scores[id]||0)}
+  function saveScore(id,score){ if(score>scoreOf(id)){state.scores[id]=Math.floor(score);localStorage.setItem('daybreakScores',JSON.stringify(state.scores));showToast('LIGHT MEMORY SAVED',`${games.find(g=>g.id===id)?.title || id} · ${Math.floor(score).toString().padStart(4,'0')}`);return true} return false }
+  function updateClock(){const d=new Date();els.clock.textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}).replace(' ','');}
+  setInterval(updateClock,1000);updateClock();
+
+  const audio = (()=>{let ac=null; function ensure(){if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();return ac} function beep(freq=440,dur=.04,vol=.04,type='square'){if(!state.sound)return;const a=ensure(),o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+dur);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+dur)} return {move(){beep(640,.025,.025)},ok(){beep(780,.035,.035);setTimeout(()=>beep(1080,.045,.03),45)},back(){beep(320,.045,.025)},score(){beep(1240,.03,.028)},error(){beep(150,.09,.035,'sawtooth')},boot(){[440,660,880,1170].forEach((n,i)=>setTimeout(()=>beep(n,.11,.025),i*95))}}})();
+
+  function buildCards(){els.carousel.innerHTML='';games.forEach((g,i)=>{const b=document.createElement('button');b.className='card'+(g.type==='system'?' system-card':'');b.dataset.index=i;b.setAttribute('aria-label',g.title);if(g.image)b.innerHTML=`<img src="${g.image}" alt=""><span class="card-copy"><span class="card-title">${g.title}</span><span class="card-code">${g.code}</span></span>`;else b.innerHTML=`<span class="system-icon"></span><span class="card-copy"><span class="card-title">${g.title}</span><span class="card-code">${g.code}</span></span>`;b.addEventListener('click',()=>{if(state.selected===i)openSelected();else select(i)});els.carousel.appendChild(b)});renderSelection(false)}
+  function select(i,play=true){state.selected=(i+games.length)%games.length;renderSelection();if(play)audio.move()}
+  function renderSelection(animate=true){const g=games[state.selected];document.querySelectorAll('.card').forEach((c,i)=>c.classList.toggle('active',i===state.selected));const cardW=Math.min(Math.max(innerWidth*.115,120),184)+16;const maxShift=Math.max(0,(state.selected-1)*cardW);els.carousel.style.transform=`translateX(${-maxShift}px)`;if(animate){$('#heroCopy').style.opacity='.1';setTimeout(()=>{$('#heroCopy').style.opacity='1'},110)}els.eyebrow.textContent=g.code;els.title.textContent=g.title;els.desc.textContent=g.desc;els.genre.textContent=g.genre;els.control.textContent=g.control;els.best.textContent=g.type==='game'?`Best ${scoreOf(g.id).toString().padStart(4,'0')}`:'Daybreak OS';els.ambient.style.backgroundImage=g.image?`url('${g.image}')`:`radial-gradient(circle at 75% 45%, rgba(230,168,19,.18), transparent 33%),linear-gradient(120deg,#1a1d1a,#070807)`}
+
+  function openSelected(){const g=games[state.selected];audio.ok();if(g.type==='game')openGame(g);else openSystemPanel(g.id)}
+  function openSystemPanel(id){let html='';els.panelKicker.textContent='Daybreak OS'; if(id==='saves'){els.panelTitle.textContent='Light Memory';html='<div class="score-list">'+games.filter(g=>g.type==='game').map(g=>`<div class="score-row"><img class="score-thumb" src="${g.image}" alt=""><div><div class="score-name">${g.title}</div><div class="score-code">${g.code}</div></div><div class="score-value">${scoreOf(g.id).toString().padStart(4,'0')}</div></div>`).join('')+'</div><p style="color:var(--muted);font-size:11px;margin-top:18px">Scores are stored locally in this browser, simulating Light Memory.</p>'}
+    if(id==='settings'){els.panelTitle.textContent='Settings';html=`<div class="grid"><div class="setting"><label>System sound <button class="toggle ${state.sound?'on':''}" data-setting="sound" aria-label="Toggle sound"></button></label><p>Menu tones, game effects, startup motif.</p></div><div class="setting"><label>Motion <button class="toggle ${state.motion?'on':''}" data-setting="motion" aria-label="Toggle motion"></button></label><p>Carousel lift, ambient transitions, interface movement.</p></div><div class="setting"><label>High contrast <button class="toggle ${state.contrast==='high'?'on':''}" data-setting="contrast" aria-label="Toggle high contrast"></button></label><p>Stronger white levels for OLED-style readability.</p></div><div class="setting"><label>Factory reset <button class="icon-btn" data-setting="reset">↺</button></label><p>Erase all simulated Light Memory scores and settings.</p></div></div>`}
+    if(id==='system'){els.panelTitle.textContent='System';html=`<div class="system-specs"><div class="spec"><span>Console</span><strong>Nahar Pico NPC-01</strong></div><div class="spec"><span>OS</span><strong>Daybreak OS v1.0 Web</strong></div><div class="spec"><span>Profile</span><strong>Launch Pack · 5 games</strong></div><div class="spec"><span>Display</span><strong>128×64 monochrome target</strong></div><div class="spec"><span>Memory</span><strong>Light Memory · browser localStorage</strong></div><div class="spec"><span>Input</span><strong>Keyboard · mouse · touch</strong></div></div><div style="margin-top:18px;border:1px solid var(--line);border-radius:16px;padding:16px"><img src="assets/console.webp" alt="Nahar Pico console" style="width:100%;border-radius:12px;display:block;filter:saturate(.55)"></div>`}
+    els.panelBody.innerHTML=html;els.modal.classList.add('open');els.modal.setAttribute('aria-hidden','false');els.panelBody.querySelectorAll('[data-setting]').forEach(btn=>btn.addEventListener('click',handleSetting))}
+  function handleSetting(e){const k=e.currentTarget.dataset.setting;if(k==='sound'){state.sound=!state.sound;localStorage.setItem('daybreakSound',state.sound);e.currentTarget.classList.toggle('on',state.sound);els.soundStatus.textContent=state.sound?'SOUND ON':'SOUND OFF';if(state.sound)audio.ok()}if(k==='motion'){state.motion=!state.motion;localStorage.setItem('daybreakMotion',state.motion);e.currentTarget.classList.toggle('on',state.motion);document.documentElement.style.setProperty('--ease',state.motion?'cubic-bezier(.2,.8,.2,1)':'linear')}if(k==='contrast'){state.contrast=state.contrast==='high'?'normal':'high';localStorage.setItem('daybreakContrast',state.contrast);e.currentTarget.classList.toggle('on',state.contrast==='high');document.body.style.filter=state.contrast==='high'?'contrast(1.22) brightness(1.05)':'none'}if(k==='reset'){if(confirm('Erase all Daybreak OS web saves and settings?')){localStorage.removeItem('daybreakScores');state.scores={};showToast('LIGHT MEMORY CLEARED','All scores reset to zero.');openSystemPanel('settings');renderSelection(false)}}}
+  function closeModal(){els.modal.classList.remove('open');els.modal.setAttribute('aria-hidden','true');audio.back()}
+
+  function showToast(title,msg){els.toastTitle.textContent=title;els.toastMessage.textContent=msg;els.toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>els.toast.classList.remove('show'),3000)}
+  function fullscreen(){if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()}
+
+  const gameDefs = {
+    mothwell:{title:'Mothwell',intro:'Collect three light sparks, then reach the open gate. Avoid the moving shadows. Arrow keys move; hold A to dash.',setup:setupMothwell,update:updateMothwell,draw:drawMothwell},
+    signal:{title:'Dune Signal',intro:'Match the target waveform. Left/right changes frequency, up/down changes phase, B stabilizes noise, A locks the signal.',setup:setupSignal,update:updateSignal,draw:drawSignal},
+    falcon:{title:'Black Falcon',intro:'Press A or Up to flap. Pass through tower gaps and collect embers. Release to fall.',setup:setupFalcon,update:updateFalcon,draw:drawFalcon},
+    doors:{title:'100 Doors',intro:'Choose left or right, then press A to open. Protect HP, keys, and light as long as possible.',setup:setupDoors,update:updateDoors,draw:drawDoors},
+    coin:{title:'Coin Saint',intro:'Read the symbol, then judge: Left reject, Right accept, A bless, B curse. Three mistakes end the run.',setup:setupCoin,update:updateCoin,draw:drawCoin}
+  };
+  let G={};
+  function openGame(game){state.activeGame=game;const def=gameDefs[game.id];els.gameThumb.src=game.image;els.gameName.textContent=game.title;els.gameCode.textContent=game.code;els.instructionTitle.textContent=def.title;els.instructionText.textContent=def.intro;els.gameOverlay.classList.add('open');els.gameOverlay.setAttribute('aria-hidden','false');els.instructions.classList.remove('hidden');state.running=false;state.paused=false;els.gameStatus.textContent='READY';cancelAnimationFrame(state.raf);def.setup();def.draw();}
+  function beginGame(){const def=gameDefs[state.activeGame.id];def.setup();state.running=true;state.paused=false;els.instructions.classList.add('hidden');els.gameStatus.textContent='RUNNING';state.lastTime=performance.now();state.raf=requestAnimationFrame(gameLoop);audio.ok()}
+  function exitGame(){state.running=false;cancelAnimationFrame(state.raf);els.gameOverlay.classList.remove('open');els.gameOverlay.setAttribute('aria-hidden','true');state.activeGame=null;state.keys.clear();state.touchKeys.clear();renderSelection(false);audio.back()}
+  function gameLoop(t){if(!state.running)return;const dt=Math.min(.04,(t-state.lastTime)/1000||.016);state.lastTime=t;if(!state.paused){const def=gameDefs[state.activeGame.id];def.update(dt);def.draw()}state.raf=requestAnimationFrame(gameLoop)}
+  function gameOver(score,label='RUN ENDED'){state.running=false;cancelAnimationFrame(state.raf);saveScore(state.activeGame.id,score);els.gameStatus.textContent='LIGHT MEMORY';els.instructionTitle.textContent=label;els.instructionText.textContent=`Score ${Math.floor(score)} · Best ${Math.max(score,scoreOf(state.activeGame.id))}.`;els.startGame.textContent='RETRY';els.instructions.classList.remove('hidden');audio.error()}
+  function keyDown(code){state.keys.add(code);state.touchKeys.add(code)}function keyUp(code){state.keys.delete(code);state.touchKeys.delete(code)}function isDown(...codes){return codes.some(c=>state.keys.has(c)||state.touchKeys.has(c))}
+  function pressed(code){return G.just?.has(code)}function consumeInputs(){G.just=new Set()}
+
+  function prepCanvas(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,els.canvas.width,els.canvas.height);ctx.fillStyle='#050605';ctx.fillRect(0,0,900,560);ctx.strokeStyle='rgba(238,233,220,.18)';ctx.lineWidth=1}
+  function pixelText(text,x,y,size=18,align='left',color='#eee9dc'){ctx.fillStyle=color;ctx.font=`600 ${size}px ui-monospace, SFMono-Regular, Menlo, monospace`;ctx.textAlign=align;ctx.fillText(text,x,y)}
+
+  function setupMothwell(){G={x:90,y:290,score:0,depth:1,lights:0,needed:3,gateOpen:false,spark:{x:450,y:260},enemies:[{x:700,y:190,dx:-70,dy:45},{x:650,y:410,dx:-45,dy:-55}],just:new Set()};els.hudLeft.textContent='DEPTH 01 · LIGHT 0/3';els.hudRight.textContent='SCORE 0000'}
+  function updateMothwell(dt){let s=isDown('KeyA')?230:150;if(isDown('ArrowLeft'))G.x-=s*dt;if(isDown('ArrowRight'))G.x+=s*dt;if(isDown('ArrowUp'))G.y-=s*dt;if(isDown('ArrowDown'))G.y+=s*dt;G.x=Math.max(35,Math.min(830,G.x));G.y=Math.max(70,Math.min(500,G.y));G.enemies.forEach(e=>{e.x+=e.dx*dt;e.y+=e.dy*dt;if(e.x<35||e.x>835)e.dx*=-1;if(e.y<70||e.y>500)e.dy*=-1;if(Math.hypot(G.x-e.x,G.y-e.y)<27)gameOver(G.score,'LIGHT LOST')});if(Math.hypot(G.x-G.spark.x,G.y-G.spark.y)<28){G.lights++;G.score+=10+G.depth;audio.score();if(G.lights>=G.needed)G.gateOpen=true;else{G.spark.x=120+Math.random()*650;G.spark.y=100+Math.random()*360}}if(G.gateOpen&&G.x>805&&Math.abs(G.y-280)<75){G.depth++;G.score+=50+G.depth*5;G.lights=0;G.needed=Math.min(5,3+Math.floor(G.depth/4));G.gateOpen=false;G.x=70;G.y=280;G.spark.x=200+Math.random()*520;G.spark.y=100+Math.random()*360;G.enemies.push({x:700,y:100+Math.random()*350,dx:-50-Math.random()*50,dy:(Math.random()>.5?1:-1)*(35+Math.random()*45)});audio.ok()}els.hudLeft.textContent=`DEPTH ${String(G.depth).padStart(2,'0')} · LIGHT ${G.lights}/${G.needed}`;els.hudRight.textContent=`SCORE ${String(Math.floor(G.score)).padStart(4,'0')}`}
+  function drawMothwell(){prepCanvas();ctx.strokeStyle='rgba(238,233,220,.2)';for(let i=0;i<7;i++){ctx.beginPath();ctx.moveTo(0,80+i*70);ctx.lineTo(900,50+i*74);ctx.stroke()}ctx.strokeStyle='#eee9dc';ctx.strokeRect(18,52,864,470);ctx.fillStyle=G.gateOpen?'#e6a813':'#eee9dc';ctx.fillRect(842,220,20,130);if(!G.gateOpen){ctx.fillStyle='#050605';ctx.fillRect(848,230,4,110)}ctx.fillStyle='#ffc94c';ctx.beginPath();ctx.arc(G.spark.x,G.spark.y,8,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,201,76,.5)';ctx.beginPath();ctx.arc(G.spark.x,G.spark.y,15,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#eee9dc';ctx.save();ctx.translate(G.x,G.y);ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(-18,-18);ctx.lineTo(-10,2);ctx.lineTo(-20,13);ctx.lineTo(0,8);ctx.lineTo(20,13);ctx.lineTo(10,2);ctx.lineTo(18,-18);ctx.closePath();ctx.fill();ctx.restore();G.enemies.forEach(e=>{ctx.fillStyle='#3d423c';ctx.beginPath();ctx.arc(e.x,e.y,17,0,Math.PI*2);ctx.fill();ctx.fillStyle='#050605';ctx.fillRect(e.x-8,e.y-5,5,5);ctx.fillRect(e.x+3,e.y-5,5,5)})}
+
+  function setupSignal(){G={round:1,targetF:2+Math.floor(Math.random()*7),targetP:Math.floor(Math.random()*10),f:5,p:5,noise:4,time:20,score:0,just:new Set(),tick:0};els.hudLeft.textContent='ROUND 01 · NOISE 4';els.hudRight.textContent='TIME 20 · SCORE 0000'}
+  function wave(x,f,p,base){const t=((x*f*.055)+(p*.7));return base+Math.sin(t)*34+Math.sin(t*.5)*8}
+  function signalAccuracy(){return Math.max(0,100-Math.abs(G.targetF-G.f)*13-Math.abs(G.targetP-G.p)*8-G.noise*3)}
+  function updateSignal(dt){G.tick+=dt;G.time-=dt;if(G.time<=0)return gameOver(G.score,'SIGNAL LOST');if(pressed('ArrowLeft'))G.f=Math.max(1,G.f-1);if(pressed('ArrowRight'))G.f=Math.min(9,G.f+1);if(pressed('ArrowDown'))G.p=Math.max(0,G.p-1);if(pressed('ArrowUp'))G.p=Math.min(9,G.p+1);if(pressed('KeyB'))G.noise=Math.max(0,G.noise-1);if(pressed('KeyA')){const a=signalAccuracy();if(a<35)return gameOver(G.score,'SIGNAL COLLAPSED');G.score+=Math.floor(a+G.round*7);G.round++;G.targetF=1+Math.floor(Math.random()*9);G.targetP=Math.floor(Math.random()*10);G.f=1+Math.floor(Math.random()*9);G.p=Math.floor(Math.random()*10);G.noise=Math.min(9,2+Math.floor(G.round/2));G.time=Math.max(10,20-G.round*.7);audio.ok()}if(Math.floor(G.tick*2)%18===0)G.noise=Math.min(9,G.noise+.005);els.hudLeft.textContent=`ROUND ${String(G.round).padStart(2,'0')} · NOISE ${Math.floor(G.noise)}`;els.hudRight.textContent=`TIME ${Math.ceil(G.time)} · SCORE ${String(Math.floor(G.score)).padStart(4,'0')}`;consumeInputs()}
+  function drawSignal(){prepCanvas();pixelText('TARGET',38,108,16);pixelText('PLAYER',38,334,16);ctx.strokeStyle='#eee9dc';ctx.lineWidth=3;ctx.beginPath();for(let x=40;x<860;x+=4){const y=wave(x,G.targetF,G.targetP,210);x===40?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();ctx.strokeStyle='#e6a813';ctx.beginPath();for(let x=40;x<860;x+=4){const n=(Math.random()-.5)*G.noise*4;const y=wave(x,G.f,G.p,420)+n;x===40?ctx.moveTo(x,y):ctx.lineTo(x,y)}ctx.stroke();const a=signalAccuracy();pixelText(`F ${G.f}  PHASE ${G.p}`,40,515,18);pixelText(`LOCK ${a}%`,860,515,18,'right',a>=70?'#ffc94c':'#eee9dc');ctx.strokeStyle='rgba(238,233,220,.2)';ctx.strokeRect(620,485,240,20);ctx.fillStyle=a>=70?'#e6a813':'#7d7d76';ctx.fillRect(622,487,Math.max(0,236*a/100),16)}
+
+  function setupFalcon(){G={y:280,v:0,towerX:900,gapY:140+Math.random()*180,gap:180,score:0,speed:190,ember:{x:980,y:280},just:new Set()};els.hudLeft.textContent='EMBER ACTIVE';els.hudRight.textContent='SCORE 0000'}
+  function updateFalcon(dt){if(pressed('KeyA')||pressed('ArrowUp')){G.v=-300;audio.move()}G.v+=620*dt;G.y+=G.v*dt;G.towerX-=G.speed*dt;G.ember.x-=G.speed*dt;G.score+=dt*4;if(G.towerX<-70){G.towerX=930;G.gap=Math.max(130,180-G.score*.06);G.gapY=75+Math.random()*(410-G.gap);G.ember={x:G.towerX+130,y:G.gapY+G.gap/2};G.speed=Math.min(340,190+G.score*.35);G.score+=20;audio.score()}if(G.y<55||G.y>510)return gameOver(G.score,'EMBER LOST');const bird={x:155,y:G.y,w:55,h:34};const tx=G.towerX;if(bird.x+bird.w>tx&&bird.x<tx+70&&(bird.y<G.gapY||bird.y+bird.h>G.gapY+G.gap))return gameOver(G.score,'EMBER LOST');if(Math.hypot(bird.x-G.ember.x,bird.y-G.ember.y)<35){G.score+=15;G.ember.x=-100;audio.score()}els.hudRight.textContent=`SCORE ${String(Math.floor(G.score)).padStart(4,'0')}`;consumeInputs()}
+  function drawFalcon(){prepCanvas();ctx.fillStyle='#1a1d1a';for(let i=0;i<18;i++){const x=(i*83+G.score*4)%900;const h=80+(i*47)%280;ctx.fillRect(x,560-h,40,h)}ctx.fillStyle='#eee9dc';ctx.save();ctx.translate(155,G.y);ctx.beginPath();ctx.moveTo(-25,0);ctx.lineTo(-50,-25);ctx.lineTo(-10,-12);ctx.lineTo(10,-30);ctx.lineTo(25,-10);ctx.lineTo(55,0);ctx.lineTo(24,10);ctx.lineTo(4,30);ctx.lineTo(-10,14);ctx.lineTo(-50,26);ctx.closePath();ctx.fill();ctx.restore();ctx.fillStyle='#222522';ctx.fillRect(G.towerX,52,70,G.gapY-52);ctx.fillRect(G.towerX,G.gapY+G.gap,70,520-(G.gapY+G.gap));ctx.fillStyle='#ffc94c';ctx.beginPath();ctx.arc(G.ember.x,G.ember.y,9,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,201,76,.4)';ctx.beginPath();ctx.arc(G.ember.x,G.ember.y,20,0,Math.PI*2);ctx.stroke()}
+
+  function setupDoors(){G={floor:1,hp:5,keys:1,light:3,relics:0,score:0,selected:0,doors:[rollDoor(),rollDoor()],message:'CHOOSE A DOOR',just:new Set()};els.hudLeft.textContent='FLOOR 01 · HP 5 · K 1 · L 3';els.hudRight.textContent='SCORE 0000'}
+  function rollDoor(){const a=['EMPTY','HEAL','TRAP','KEY','LOCKED','SHADOW','LANTERN','RELIC'];return a[Math.floor(Math.random()*a.length)]}
+  function resolveDoor(type){let text='';if(type==='EMPTY'){G.score+=5+G.floor;text='EMPTY ROOM'}if(type==='HEAL'){G.hp=Math.min(9,G.hp+1);G.score+=10;text='WARM ROOM · HP +1'}if(type==='TRAP'){G.hp--;G.score+=12;text='BLADE ROOM · HP -1'}if(type==='KEY'){G.keys=Math.min(9,G.keys+1);G.score+=12;text='KEY FOUND'}if(type==='LOCKED'){if(G.keys>0){G.keys--;G.score+=28;text='KEY SPENT'}else{G.hp-=2;text='FORCED ENTRY · HP -2'}}if(type==='SHADOW'){if(G.light>0){G.light--;G.score+=20;text='LIGHT SPENT'}else{G.hp-=2;text='DARK HALL · HP -2'}}if(type==='LANTERN'){G.light=Math.min(9,G.light+1);G.score+=14;text='LANTERN · LIGHT +1'}if(type==='RELIC'){G.relics++;G.score+=40+G.relics*5;text='RELIC CLAIMED'}G.message=text;G.floor++;G.doors=[rollDoor(),rollDoor()];if(G.hp<=0)return gameOver(G.score,'DOOR CLOSED');if(G.floor>100){G.score+=500;return gameOver(G.score,'TOWER CLEARED')}audio.ok()}
+  function updateDoors(){if(pressed('ArrowLeft'))G.selected=0;if(pressed('ArrowRight'))G.selected=1;if(pressed('KeyA'))resolveDoor(G.doors[G.selected]);els.hudLeft.textContent=`FLOOR ${String(G.floor).padStart(2,'0')} · HP ${G.hp} · K ${G.keys} · L ${G.light}`;els.hudRight.textContent=`SCORE ${String(Math.floor(G.score)).padStart(4,'0')}`;consumeInputs()}
+  function drawDoors(){prepCanvas();pixelText(G.message,450,90,22,'center',G.message==='CHOOSE A DOOR'?'#eee9dc':'#ffc94c');[0,1].forEach(i=>{const x=i?540:230;ctx.strokeStyle=i===G.selected?'#e6a813':'#77776f';ctx.lineWidth=i===G.selected?5:2;ctx.strokeRect(x,160,130,270);ctx.strokeRect(x+16,180,98,230);ctx.fillStyle='#eee9dc';ctx.beginPath();ctx.arc(x+90,305,6,0,Math.PI*2);ctx.fill();pixelText(G.doors[i],x+65,470,17,'center',i===G.selected?'#ffc94c':'#a8a79e')});pixelText(`RELICS ${G.relics}`,450,520,16,'center')}
+
+  function setupCoin(){G={lives:3,combo:0,score:0,judged:0,symbol:null,required:null,timer:3.5,feedback:'',just:new Set()};spawnCoin();els.hudLeft.textContent='LIVES 3 · COMBO 0';els.hudRight.textContent='SCORE 0000'}
+  function spawnCoin(){const map=[['SUN','ACCEPT'],['MOON','REJECT'],['EYE','BLESS'],['CRACK','CURSE'],['CROWN','ACCEPT'],['MASK','CURSE']];const p=map[Math.floor(Math.random()*map.length)];G.symbol=p[0];G.required=p[1];G.timer=Math.max(1.15,3.5-G.judged*.035);G.feedback=''}
+  function judgeCoin(action){G.judged++;if(action===G.required){G.combo++;G.score+=10+G.combo+Math.floor(G.judged/3);G.feedback='CORRECT';audio.score()}else{G.combo=0;G.lives--;G.feedback=`NEEDED ${G.required}`;audio.error()}if(G.lives<=0)return gameOver(G.score,'FORTUNE DUE');setTimeout(()=>{if(state.running)spawnCoin()},330)}
+  function updateCoin(dt){G.timer-=dt;if(G.timer<=0){G.lives--;G.combo=0;G.feedback='MISSED';if(G.lives<=0)return gameOver(G.score,'FORTUNE DUE');spawnCoin()}if(!G.feedback){if(pressed('ArrowLeft'))judgeCoin('REJECT');if(pressed('ArrowRight'))judgeCoin('ACCEPT');if(pressed('KeyA'))judgeCoin('BLESS');if(pressed('KeyB'))judgeCoin('CURSE')}els.hudLeft.textContent=`LIVES ${G.lives} · COMBO ${G.combo}`;els.hudRight.textContent=`SCORE ${String(Math.floor(G.score)).padStart(4,'0')}`;consumeInputs()}
+  function drawCoin(){prepCanvas();pixelText(G.feedback||'JUDGE THE COIN',450,90,22,'center',G.feedback?'#ffc94c':'#eee9dc');ctx.strokeStyle='#eee9dc';ctx.lineWidth=6;ctx.beginPath();ctx.arc(450,290,110,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#eee9dc';pixelText(G.symbol,450,315,42,'center');ctx.strokeStyle='rgba(238,233,220,.18)';ctx.strokeRect(260,465,380,18);ctx.fillStyle='#e6a813';ctx.fillRect(262,467,376*Math.max(0,G.timer/3.5),14);pixelText('← REJECT',90,520,15);pixelText('A BLESS',330,520,15);pixelText('B CURSE',570,520,15);pixelText('ACCEPT →',810,520,15,'right')}
+
+  document.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space'].includes(e.code))e.preventDefault();if(!state.keys.has(e.code)){G.just?.add(e.code)}state.keys.add(e.code);if(els.gameOverlay.classList.contains('open')){if(e.code==='Escape'||e.code==='KeyM')exitGame();else if(e.code==='Enter'&&!state.running)beginGame();else if(e.code==='KeyP'){state.paused=!state.paused;els.gameStatus.textContent=state.paused?'PAUSED':'RUNNING'}}else if(els.modal.classList.contains('open')){if(e.code==='Escape'||e.code==='KeyB')closeModal()}else{if(e.code==='ArrowLeft')select(state.selected-1);if(e.code==='ArrowRight')select(state.selected+1);if(e.code==='Enter'||e.code==='KeyA')openSelected();if(e.code==='KeyF')fullscreen();if(e.code==='KeyS')openSystemPanel('settings')}});
+  document.addEventListener('keyup',e=>state.keys.delete(e.code));
+  els.touchControls.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b)return;e.preventDefault();G.just?.add(b.dataset.key);state.touchKeys.add(b.dataset.key)});els.touchControls.addEventListener('pointerup',e=>{const b=e.target.closest('button');if(b)state.touchKeys.delete(b.dataset.key)});els.touchControls.addEventListener('pointercancel',()=>state.touchKeys.clear());
+  els.closeModal.addEventListener('click',closeModal);els.modal.addEventListener('click',e=>{if(e.target===els.modal)closeModal()});els.startGame.addEventListener('click',()=>{els.startGame.textContent='BEGIN';beginGame()});els.exitGame.addEventListener('click',exitGame);
+  window.addEventListener('resize',()=>renderSelection(false));
+
+  buildCards();els.soundStatus.textContent=state.sound?'SOUND ON':'SOUND OFF';if(state.contrast==='high')document.body.style.filter='contrast(1.22) brightness(1.05)';setTimeout(()=>audio.boot(),300);setTimeout(()=>{els.boot.classList.add('hidden');showToast('DAYBREAK OS READY','Five built-in worlds are available.')},2850);
+})();
+</script>
+</body>
+</html>
