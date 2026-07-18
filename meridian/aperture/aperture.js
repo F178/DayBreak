@@ -9,7 +9,7 @@ const objective=$('objective'),ringReadout=$('ringReadout'),memory=$('memory'),c
 
 const C={void:'#050606',bone:'#e9e4d8',ash:'#8c8c86',amber:'#e9a81a',red:'#ba3d32'};
 const TAU=Math.PI*2;
-const state={running:false,complete:false,control:-1,last:0,time:0,keys:{},touch:{mx:0,my:0,lx:0,ly:0},player:{x:0,z:6.3,yaw:Math.PI},rings:[2.1,-1.5,1.35],locked:[false,false,false],core:0,door:0};
+const state={running:false,complete:false,control:-1,last:0,time:0,keys:{},touch:{mx:0,my:0,lx:0,ly:0},player:{x:0,z:6.3,yaw:Math.PI,pitch:0},rings:[2.1,-1.5,1.35],locked:[false,false,false],core:0,door:0};
 const consoles=[0,TAU/3,TAU*2/3].map((a,i)=>({i,x:Math.sin(a)*5.4,z:Math.cos(a)*5.4,a}));
 const target=0;
 
@@ -22,13 +22,13 @@ function load(){try{const s=JSON.parse(localStorage.getItem('highSunAperture')||
 load();
 
 function start(){boot.classList.remove('active');complete.classList.remove('active');hud.classList.remove('hidden');crosshair.classList.remove('hidden');$('help').classList.remove('hidden');state.running=true;state.last=performance.now();requestAnimationFrame(loop);if(matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.()}
-function reset(){Object.assign(state.player,{x:0,z:6.3,yaw:Math.PI});state.rings=[2.1,-1.5,1.35];state.locked=[false,false,false];state.core=0;state.door=0;state.control=-1;state.complete=false;objective.textContent='RESTORE THE THREE ALIGNMENT RINGS';complete.classList.remove('active');hud.classList.remove('hidden');crosshair.classList.remove('hidden');state.running=true;state.last=performance.now();save();requestAnimationFrame(loop)}
+function reset(){Object.assign(state.player,{x:0,z:6.3,yaw:Math.PI,pitch:0});state.rings=[2.1,-1.5,1.35];state.locked=[false,false,false];state.core=0;state.door=0;state.control=-1;state.complete=false;objective.textContent='RESTORE THE THREE ALIGNMENT RINGS';complete.classList.remove('active');hud.classList.remove('hidden');crosshair.classList.remove('hidden');state.running=true;state.last=performance.now();save();requestAnimationFrame(loop)}
 startBtn.onclick=start;restartBtn.onclick=reset;
 fullscreenBtn.onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
 touchToggle.onclick=()=>$('touch').classList.toggle('hidden');
 canvas.onclick=()=>{if(state.running&&state.control<0&&matchMedia('(pointer:fine)').matches)canvas.requestPointerLock?.()};
 
-document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas&&state.running&&state.control<0)state.player.yaw=norm(state.player.yaw+e.movementX*.0024)});
+// Mouse look is implemented by controls.js so both axes and settings share one path.
 document.addEventListener('keydown',e=>{state.keys[e.code]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if((e.code==='Enter'||e.code==='KeyE'||e.code==='Space')&&!e.repeat)act();if(e.code==='Escape')leaveConsole()});
 document.addEventListener('keyup',e=>state.keys[e.code]=false);
 
@@ -47,7 +47,15 @@ function tone(freq,dur){try{ac=ac||new (window.AudioContext||window.webkitAudioC
 
 function update(dt){const gp=gamepad();if(gp.sun&&!lastSun)act();if(gp.door&&!lastDoor)leaveConsole();lastSun=gp.sun;lastDoor=gp.door;
   if(state.control>=0){let turn=0;if(state.keys.ArrowLeft||state.keys.KeyA)turn-=1;if(state.keys.ArrowRight||state.keys.KeyD)turn+=1;turn+=gp.mx+state.touch.mx;state.rings[state.control]=norm(state.rings[state.control]+turn*dt*1.45);const deg=Math.max(-70,Math.min(70,norm(state.rings[state.control]-target)/Math.PI*70));dialNeedle.style.transform=`rotate(${deg}deg)`;consoleStatus.textContent=Math.abs(deg)<6?'SIGNAL CENTERED · PRESS SUN TO LOCK':'ROTATE UNTIL THE SIGNAL CENTERS';return}
-  let forward=0,strafe=0,look=0;if(state.keys.KeyW||state.keys.ArrowUp)forward+=1;if(state.keys.KeyS||state.keys.ArrowDown)forward-=1;if(state.keys.KeyA)strafe-=1;if(state.keys.KeyD)strafe+=1;if(state.keys.ArrowLeft)look-=1;if(state.keys.ArrowRight)look+=1;forward+=-gp.my-state.touch.my;strafe+=gp.mx+state.touch.mx;look+=gp.lx;state.player.yaw=norm(state.player.yaw+look*dt*1.9);const speed=2.55;const sy=Math.sin(state.player.yaw),cy=Math.cos(state.player.yaw);let nx=state.player.x+(sy*forward+cy*strafe)*speed*dt;let nz=state.player.z+(cy*forward-sy*strafe)*speed*dt;const r=Math.hypot(nx,nz);if(r<7.45){state.player.x=nx;state.player.z=nz}
+  let forward=0,strafe=0,look=0;if(state.keys.KeyW||state.keys.ArrowUp)forward+=1;if(state.keys.KeyS||state.keys.ArrowDown)forward-=1;if(state.keys.KeyA)strafe-=1;if(state.keys.KeyD)strafe+=1;if(state.keys.ArrowLeft)look-=1;if(state.keys.ArrowRight)look+=1;forward+=-gp.my-state.touch.my;strafe+=gp.mx+state.touch.mx;look+=gp.lx;state.player.yaw=norm(state.player.yaw+look*dt*1.9);
+  // Camera-relative first-person movement: W always follows the crosshair,
+  // while A/D remain perpendicular to the current view direction.
+  const inputLength=Math.hypot(forward,strafe);if(inputLength>1){forward/=inputLength;strafe/=inputLength}
+  const speed=2.55,sy=Math.sin(state.player.yaw),cy=Math.cos(state.player.yaw);
+  const forwardX=-sy,forwardZ=cy,rightX=cy,rightZ=sy;
+  let nx=state.player.x+(forwardX*forward+rightX*strafe)*speed*dt;
+  let nz=state.player.z+(forwardZ*forward+rightZ*strafe)*speed*dt;
+  const r=Math.hypot(nx,nz);if(r<7.45){state.player.x=nx;state.player.z=nz}
   const c=nearestConsole();if(c&&!state.locked[c.i]){prompt.textContent=`SUN · ENGAGE RING ${['I','II','III'][c.i]} CONSOLE`;prompt.classList.remove('hidden')}else if(nearExit()&&state.locked.every(Boolean)){prompt.textContent='SUN · ENTER OBSERVATION PASSAGE';prompt.classList.remove('hidden')}else prompt.classList.add('hidden');
   const locked=state.locked.filter(Boolean).length;ringReadout.textContent=`RINGS ${locked}/3`;state.core+=(locked/3-state.core)*Math.min(1,dt*2);state.door+=(locked===3?1:0-state.door)*Math.min(1,dt*1.4);objective.textContent=locked<3?'RESTORE THE THREE ALIGNMENT RINGS':'THE OBSERVATION PASSAGE IS OPEN';
 }
