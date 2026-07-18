@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#050606">
+  <title>The Meridian Engine: Aperture — Web Test</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app">
+    <canvas id="view" aria-label="The Meridian Engine Aperture playable test"></canvas>
+
+    <section id="boot" class="screen active">
+      <div class="boot-mark" aria-hidden="true"><i></i><b></b></div>
+      <p class="kicker">HIGH SUN DEVELOPMENT UNIT</p>
+      <h1>THE MERIDIAN ENGINE</h1>
+      <p class="mono">WORLD PACKAGE NWX-MER-01A · APERTURE</p>
+      <button id="startBtn">SUN · ENTER APERTURE</button>
+    </section>
+
+    <header id="hud" class="hidden">
+      <div>
+        <p class="kicker">APERTURE TEST CHAMBER</p>
+        <strong id="objective">RESTORE THE THREE ALIGNMENT RINGS</strong>
+      </div>
+      <div class="hud-right">
+        <span id="ringReadout">RINGS 0/3</span>
+        <span id="memory">LIGHT MEMORY READY</span>
+      </div>
+    </header>
+
+    <div id="crosshair" class="hidden" aria-hidden="true"></div>
+    <div id="prompt" class="hidden"></div>
+
+    <section id="consolePanel" class="panel hidden" aria-live="polite">
+      <p class="kicker">ALIGNMENT CONSOLE</p>
+      <h2 id="consoleTitle">RING I</h2>
+      <div class="dial"><i id="dialNeedle"></i><b></b></div>
+      <p id="consoleStatus" class="mono">ROTATE UNTIL THE SIGNAL CENTERS</p>
+      <div class="controls-row"><span>LEFT / RIGHT ROTATE</span><span>SUN LOCK</span><span>DOOR EXIT</span></div>
+    </section>
+
+    <section id="complete" class="screen">
+      <p class="kicker">MARK RECORDED</p>
+      <h1>FIRST LIGHT</h1>
+      <p class="mono">THE MACHINE REMEMBERS.</p>
+      <p class="completion-copy">The artificial sun has reached the Meridian line. Aperture is complete.</p>
+      <div class="completion-actions">
+        <button id="restartBtn">RESTART APERTURE</button>
+        <a href="../">RETURN TO THE HORIZON</a>
+      </div>
+    </section>
+
+    <button id="fullscreenBtn" class="utility">FULLSCREEN</button>
+    <button id="touchToggle" class="utility secondary">TOUCH</button>
+
+    <section id="touch" class="hidden" aria-label="Touch controls">
+      <div id="movePad" class="pad"><i></i></div>
+      <div id="lookPad" class="look-pad"><span>LOOK</span></div>
+      <div class="touch-buttons">
+        <button data-action="door">▯</button>
+        <button data-action="sun" class="sun">☼</button>
+      </div>
+    </section>
+
+    <footer id="help" class="hidden">
+      <span>WASD / LEFT STICK MOVE</span>
+      <span>MOUSE / RIGHT STICK LOOK</span>
+      <span>E / ENTER / SUN INTERACT</span>
+      <span>ESC / DOOR RELEASE</span>
+    </footer>
+  </main>
+  <script src="aperture.js" defer></script>
+</body>
+</html>
