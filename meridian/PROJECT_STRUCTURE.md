@@ -4,30 +4,39 @@ This directory is the isolated home-console project for **Nahar Meridian NMC-01*
 
 ```text
 meridian/
-├── index.html              # Meridian entry point
-├── README.md               # Meridian-specific usage and controls
-├── PROJECT_STRUCTURE.md    # This project boundary and roadmap
+├── index.html              # Meridian-only application shell
+├── README.md               # Meridian usage and controls
+├── PROJECT_STRUCTURE.md    # Project boundary and source map
 ├── manifest.webmanifest    # Installable web-app identity
 ├── high-sun.svg            # Meridian application icon
 ├── sw.js                   # Meridian-only offline cache
+├── styles/
+│   ├── system.css          # Core palette, boot, shell and Horizon structure
+│   ├── worlds.css          # Five launch-world presentation environments
+│   └── interface.css       # Panels, overlay, touch controls and accessibility
+├── scripts/
+│   ├── core.js             # Worlds, system spaces, state and overlays
+│   ├── games.js            # Five playable Canvas demonstrations
+│   └── input.js            # Keyboard, gamepad, touch and initialization
 └── .project-scope          # Explicit isolation rule
 ```
 
 ## Boundary
 
-The parent repository root is reserved for **Nahar Pico / Project Small Sun**. High Sun work stays in this folder. Meridian can simulate a Pico connection, but does not modify or import Pico application code.
+The repository root is reserved for **Nahar Pico / Project Small Sun**. Every High Sun implementation file stays beneath `meridian/`. Meridian may simulate a Pico connection, but it does not import, rename, overwrite or depend on Pico source code.
 
-## Next source split
+## Runtime scope
 
-The current prototype remains self-contained while it is stabilized. Its next refactor will stay inside this directory:
+The Meridian service worker uses `./` as its scope and caches only files inside `meridian/`. Browser storage uses the separate `highSunState` key, so it does not share save state with the Pico showcase.
+
+## Next modules
+
+Future work remains inside this directory:
 
 ```text
 meridian/
-├── styles/
-├── scripts/
-├── worlds/
-├── audio/
-└── assets/
+├── worlds/                 # Deeper game-specific modules and data
+├── audio/                  # Boot motif and system cues
+├── assets/                 # Meridian-only visual material
+└── tests/                  # Navigation, persistence and input checks
 ```
-
-No Pico file needs to move for that refactor.
