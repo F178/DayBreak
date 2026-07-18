@@ -1,5 +1,16 @@
-const CACHE = "daybreak-meridian-v1";
-const FILES = ["./", "./index.html", "./manifest.webmanifest", "./high-sun.svg"];
+const CACHE = "daybreak-meridian-v3";
+const FILES = [
+  "./",
+  "./index.html",
+  "./styles/system.css",
+  "./styles/worlds.css",
+  "./styles/interface.css",
+  "./scripts/core.js",
+  "./scripts/games.js",
+  "./scripts/input.js",
+  "./manifest.webmanifest",
+  "./high-sun.svg"
+];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
@@ -9,7 +20,7 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.filter(key => key !== CACHE).map(key => caches.delete(key))
+      keys.filter(key => key.startsWith("daybreak-meridian-") && key !== CACHE).map(key => caches.delete(key))
     ))
   );
   self.clients.claim();
@@ -22,6 +33,6 @@ self.addEventListener("fetch", event => {
       const copy = response.clone();
       caches.open(CACHE).then(cache => cache.put(event.request, copy));
       return response;
-    }).catch(() => caches.match("./index.html")))
+    }).catch(() => event.request.mode === "navigate" ? caches.match("./index.html") : Response.error()))
   );
 });
