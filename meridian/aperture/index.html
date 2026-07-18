@@ -41,6 +41,19 @@
       <div class="controls-row"><span>LEFT / RIGHT ROTATE</span><span>SUN LOCK</span><span>DOOR EXIT</span></div>
     </section>
 
+    <section id="settingsPanel" class="panel settings-panel hidden" aria-label="Control settings">
+      <div class="settings-head">
+        <div><p class="kicker">AXIS CONTROL PROFILE</p><h2>CONTROLS</h2></div>
+        <button id="settingsClose" class="settings-close">CLOSE</button>
+      </div>
+      <label class="setting-row"><span>MOUSE SENSITIVITY <b id="mouseSensitivityValue">0.0024</b></span><input id="mouseSensitivity" type="range" min="0.0008" max="0.0060" step="0.0001"></label>
+      <label class="setting-row"><span>CONTROLLER LOOK <b id="controllerSensitivityValue">2.15</b></span><input id="controllerSensitivity" type="range" min="0.7" max="4.0" step="0.05"></label>
+      <label class="setting-row"><span>STICK DEAD ZONE <b id="controllerDeadZoneValue">16%</b></span><input id="controllerDeadZone" type="range" min="0.05" max="0.35" step="0.01"></label>
+      <label class="toggle-row"><span>INVERT HORIZONTAL LOOK</span><input id="invertX" type="checkbox"></label>
+      <label class="toggle-row"><span>INVERT VERTICAL LOOK</span><input id="invertY" type="checkbox"></label>
+      <p class="mono settings-note">Changes save automatically to this browser. Press O at any time to open or close this panel.</p>
+    </section>
+
     <section id="complete" class="screen">
       <p class="kicker">MARK RECORDED</p>
       <h1>FIRST LIGHT</h1>
@@ -54,6 +67,7 @@
 
     <button id="fullscreenBtn" class="utility">FULLSCREEN</button>
     <button id="touchToggle" class="utility secondary">TOUCH</button>
+    <button id="settingsBtn" class="utility tertiary">CONTROLS</button>
 
     <section id="touch" class="hidden" aria-label="Touch controls">
       <div id="movePad" class="pad"><i></i></div>
@@ -68,7 +82,7 @@
       <span>WASD / LEFT STICK MOVE</span>
       <span>MOUSE / RIGHT STICK LOOK</span>
       <span>E / ENTER / SUN INTERACT</span>
-      <span>ESC / DOOR RELEASE</span>
+      <span>O CONTROL SETTINGS</span>
     </footer>
   </main>
   <script src="aperture.js" defer></script>
